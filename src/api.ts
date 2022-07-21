@@ -13,7 +13,6 @@ export const API_TIMEOUT = 10000
 export const X2Y2_API_CONFIG = {
     1: {
         apiBaseUrl: 'https://api.x2y2.org/api'
-        // apiBaseUrl: 'https://element-api.eossql.com/bridge/x2y2'
     }
 }
 

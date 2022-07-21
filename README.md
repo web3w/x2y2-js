@@ -1,52 +1,26 @@
-# looksrare-js<!-- omit in toc -->
+# x2y2-js<!-- omit in toc -->
 
-SDK for the LooksRare protocol
-
-curl --header "X-API-KEY: xxxx"   https://api.x2y2.org/api/orders
-
-{
-"contracts": ["0x00", "0x01"],
-"network_id": 1
-}
-
-```ts
-curl -X POST  --header "xxx"   
-
-    curl -X POST -H "Content-Type: application/json"  --header "xxx" \
-    -d '{"contracts": ["0x52F687B1c6aACC92b47DA5209cf25D987C876628"], "network_id": "1"}' \
-    https://api.x2y2.org//api/contracts/payment_info
-
-  curl 'https://api.x2y2.io/api/contracts/payment_info' \
-  -H 'X-API-KEY:  ' \
-  --data-raw '{"address":"0x36b1a29e0bbd47dfe9dcf7380f276e86da90c4c2","contracts":["0x52F687B1c6aACC92b47DA5209cf25D987C876628"],"network_id":1}' \
-  --compressed
-```
-https://hackmd.io/7AnOgEqFT2mZHqUQ4bXwsw?view
-
-
-
-//https://github.com/LooksRare/looksrare-sdk
-//https://etherscan.io/address/0x59728544B08AB483533076417FbBB2fD0B17CE3a#writeContract
+SDK for the X2Y2 protocol
 
 ## Installation
 
 In your project, run:
 
 ```bash
-npm i looksrare-js
+npm i x2y2-js
 ```
 
 ## Getting Started
 
-To get started, create a new OpenSeaJS client, called an Openlooksrare 🚢, using your chainId and address:
+To get started, create a new OpenSeaJS client, called an using your chainId and address:
 
 ```JavaScript
-import {LooksRareSDK} from 'looksrare-js'
+import {X2Y2SDK} from 'x2y2-js'
+import {Web3Wallets} from 'web3-wallets'
 
-const looksrare = new LooksRareSDK({
-    chainId: 4,
-    address: "0x9F7A946d935c8Efc7A8329C0d894A69bA241345A"
-})
+const {chainId, address} = new Web3Wallets('metamask')
+const x2y2 = new X2Y2SDK({chainId, address})
+
 ```
 
 In the browser environment, only the chainId and address need to be configured，If you want to use the bash environment,
@@ -124,7 +98,7 @@ const assetsQuery = {
     include_orders: true,
 } as AssetsQueryParams
 
-const assetFee = await looksrare.getAssetsFees([asset_contract_addresses])
+const assetFee = await x2y2.getAssetsFees([asset_contract_addresses])
 
 ```
 
@@ -143,7 +117,7 @@ const asset = {
     schemaName: 'ERC721'
 }
 
-const balance = await looksrare.getAssetBalances(asset, accountAddress)
+const balance = await x2y2.getAssetBalances(asset, accountAddress)
 
 ```
 
@@ -151,7 +125,7 @@ You can use this same method for fungible ERC-20 tokens like wrapped ETH (WETH).
 fungible wrapper for checking fungible balances:
 
 ```JavaScript
-const balanceOfWETH = await looksrare.getTokenBalance({
+const balanceOfWETH = await x2y2.getTokenBalance({
     accountAddress, // string
     tokenAddress: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
 })
@@ -165,7 +139,7 @@ Once you have your asset, you can do this to make an offer on it:
 // Token ID and smart contract address for a non-fungible token:
 const {tokenId, tokenAddress} = YOUR_ASSET
 
-const offer = await looksrare.createBuyOrder({
+const offer = await x2y2.createBuyOrder({
     asset: {
         tokenId,
         tokenAddress,
@@ -187,7 +161,7 @@ declines until `expirationTime` is hit:
 // Note that we convert from the JavaScript timestamp (milliseconds):
 const expirationTime = Math.round(Date.now() / 1000 + 60 * 60 * 24)
 
-const listing = await looksrare.createSellOrder({
+const listing = await x2y2.createSellOrder({
     asset: {
         tokenId,
         tokenAddress,
@@ -209,7 +183,7 @@ const listing = await looksrare.createSellOrder({
 ```ts
 // const orderStr = JSON.stringify(offer)
 const orderStr = JSON.stringify(listing)
-const order = await looksrare.postOrder(orderStr).catch((err: any) => {
+const order = await x2y2.postOrder(orderStr).catch((err: any) => {
     throw err
 }) 
 ```
@@ -221,24 +195,24 @@ Parameters passed into API filter objects are underscored instead of camel-cased
 main [OpenSea API parameters](https://docs.opensea.io/v1.0/reference):
 
 ```JavaScript
-import {OrderSide} from 'looksrare-js'
+import {OrderSide} from 'x2y2-js'
 
 // Get offers (bids), a.k.a. orders where `side == 0` 
 const query = {
     asset_contract_address: tokenAddress, //
     token_ids: [tokenId]
 }
-const {orders, count} = await looksrare.api.getOrders(query)
+const {orders, count} = await x2y2.api.getOrders(query)
 
 // Get page 2 of all auctions, a.k.a. orders where `side == 1`
-const {orders, count} = await looksrare.api.getOrders({
+const {orders, count} = await x2y2.api.getOrders({
     asset_contract_address: tokenAddress,
     token_ids: [tokenId],
     side: OrderSide.Sell
 }, 2)
 
 // Get Owner Orders
-const {orders, count} = await looksrare.getOwnerOrders()
+const {orders, count} = await x2y2.getOwnerOrders()
 ```
 
 Note that the listing price of an asset is equal to the `currentPrice` of the **lowest valid sell order** on the asset.
@@ -274,8 +248,8 @@ maker ? : string, // Address of the order's creator
 To buy an item , you need to **fulfill a sell order**. To do that, it's just one call:
 
 ```JavaScript
-const orders = await looksrare.api.getOrders({side: OrderSide.Sell, ...})
-const tx = await looksrare.fulfillOrder(JSON.stringify(orders[0]))
+const orders = await x2y2.api.getOrders({side: OrderSide.Sell, ...})
+const tx = await x2y2.fulfillOrder(JSON.stringify(orders[0]))
 console.log(tx.hash)
 await tx.wait()
 
@@ -298,8 +272,8 @@ Similar to fulfilling sell orders above, you need to fulfill a buy order on an i
 offer.
 
 ```JavaScript
-const orders = await looksrare.api.getOrders({side: OrderSide.Buy, ...})
-const tx = await looksrare.fulfillOrder(JSON.stringify(orders[0]))
+const orders = await x2y2.api.getOrders({side: OrderSide.Buy, ...})
+const tx = await x2y2.fulfillOrder(JSON.stringify(orders[0]))
 console.log(tx.hash)
 await tx.wait()
 ```
@@ -317,7 +291,7 @@ To transfer an ERC-721 asset or an ERC-1155 asset, it's just one call:
 
 ```JavaScript
 
-const transactionHash = await looksrare.transfer({
+const transactionHash = await x2y2.transfer({
     asset: {tokenId, tokenAddress},
     fromAddress, // Must own the asset
     toAddress
@@ -329,7 +303,7 @@ once:
 
 ```JavaScript
 
-const transactionHash = await looksrare.transfer({
+const transactionHash = await x2y2.transfer({
     asset: {
         tokenId,
         tokenAddress,

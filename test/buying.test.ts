@@ -243,7 +243,7 @@ const buyNow = async (
 
 (async ()=>{
     try {
-        const user = '0x20e30b5a64960a08dfb64beb8ab65d860cd71da7' // user address
+        const user = '0x20E30b5a64960A08DFb64bEB8Ab65D860cD71Da7' // user address
         const items = [
             {
                 orderId: 6816896,
@@ -254,11 +254,12 @@ const buyNow = async (
         const api = new X2Y2API({apiKey:secrets.x2y2ApiKey})
         const orders  =await api.getOrders({
             maker:user,
-            tokenAddress:"0x52F687B1c6aACC92b47DA5209cf25D987C876628",
-            tokenId:"45"
+            tokenAddress:"0x6D77496B7C143D183157E8b979e47a0A0180e86B",
+            tokenId:"1"
         })
-        const fee = await api.fetchOrderSign(items[0].orderId)
-        console.log(fee)
+        console.log(orders)
+        // const fee = await api.getRunInput(items[0].orderId)
+        // console.log(fee)
         // await buyNow(user, items)
     } catch (e) {
         console.error(e)

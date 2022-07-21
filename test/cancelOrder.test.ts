@@ -7,8 +7,9 @@ import {ethers, NULL_ADDRESS} from 'web3-wallets';
 import {bnToString, Web3ABICoder} from "web3-abi-coder";
 // import {decodeRunInput} from "../src/utils";
 import {exchangeABI} from "../src/config";
+import {decodeCancelInput} from "../src/utils";
 
-const seller = '0x32f4B63A46c1D12AD82cABC778D75aBF9889821a';
+// const seller = '0x32f4B63A46c1D12AD82cABC778D75aBF9889821a';
 const buyer = "0x20E30b5a64960A08DFb64bEB8Ab65D860cD71Da7"
 const chainId = 1;
 
@@ -30,33 +31,21 @@ const chainId = 1;
         tokenId,
         schemaName: "ERC721"
     } as Asset
-    const orderStr = await sdk.createSellOrder({
+    const order = await sdk.createSellOrder({
         asset,
         quantity: 1,
         paymentToken: NullToken,
-        startAmount: 0.11,
+        startAmount: 0.91,
         expirationTime: Math.round(Date.now() / 1000) + 960
     })
-    // const orderRes = await sdk.api.postOrder(orderStr)
+    const orderRes = await sdk.api.postOrder(order)
 
     const res = await sdk.api.getOrders({maker: buyer, tokenAddress, tokenId})
+    const orderId = res.orders[0].id;
+    const tx = await sdk.cancelOrders([orderId.toString()])
+    console.log(tx.hash)
+    await tx.wait
+    console.log("Success", tx.hash)
 
-    const order = res.orders[0]
-    const orderId = order.id;
-    const price = order.price
-    const currency = order.currency
-    const items = [
-        {
-            orderId,
-            price,
-            currency
-        }
-    ]
-    const inputs = await sdk.api.getRunInput({account: seller, items})
-    const input = inputs[0].input
-    // const foo = decodeRunInput(input)
-    const bar =sdk.exchangeCoder.decodeInputParams('run', input)
-    console.log( bar)
-    // console.log(bnToString(input))
 
 })()

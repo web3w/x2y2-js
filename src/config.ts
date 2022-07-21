@@ -175,16 +175,22 @@ export const exchangeABI = [{
     "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
     "stateMutability": "view",
     "type": "function"
-}, {
-    "inputs": [{"internalType": "bytes32[]", "name": "itemHashes", "type": "bytes32[]"}, {
-        "internalType": "uint256",
-        "name": "deadline",
-        "type": "uint256"
-    }, {"internalType": "uint8", "name": "v", "type": "uint8"}, {
-        "internalType": "bytes32",
-        "name": "r",
-        "type": "bytes32"
-    }, {"internalType": "bytes32", "name": "s", "type": "bytes32"}],
+},
+    {
+    "inputs": [
+        {"internalType": "bytes32[]", "name": "itemHashes", "type": "bytes32[]"},
+        {
+            "internalType": "uint256",
+            "name": "deadline",
+            "type": "uint256"
+        },
+        {"internalType": "uint8", "name": "v", "type": "uint8"},
+        {
+            "internalType": "bytes32",
+            "name": "r",
+            "type": "bytes32"
+        },
+        {"internalType": "bytes32", "name": "s", "type": "bytes32"}],
     "name": "cancel",
     "outputs": [],
     "stateMutability": "nonpayable",

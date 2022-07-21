@@ -2,7 +2,7 @@ import {
     APIConfig, X2Y2Order, SettleDetail, SettleShared, sleep, BaseFetch
 } from "./types";
 
-import {decodeRunInput} from "./utils";
+import {OP_COMPLETE_SELL_OFFER, OP_CANCEL_OFFER} from "./utils";
 
 export const X2Y2_API_KEY = "xx-xx" //2.5%
 
@@ -12,7 +12,8 @@ export const API_TIMEOUT = 10000
 
 export const X2Y2_API_CONFIG = {
     1: {
-        apiBaseUrl: 'https://api.x2y2.org'
+        apiBaseUrl: 'https://api.x2y2.org/api'
+        // apiBaseUrl: 'https://element-api.eossql.com/bridge/x2y2'
     }
 }
 
@@ -47,7 +48,7 @@ export class X2Y2API extends BaseFetch {
                 limit: "1"
             }
 
-            const json = await this.get(`/v1/orders`, params, {
+            const json = await this.get(`/orders`, params, {
                 headers: {
                     'X-API-KEY': this.apiKey || ""
                 }
@@ -77,7 +78,7 @@ export class X2Y2API extends BaseFetch {
                 "network_id": "1"
             }
             //base rate is 1e6
-            const json = await this.post(`/api/contracts/payment_info`, params, {
+            const json = await this.post(`/contracts/payment_info`, params, {
                 headers: {
                     'X-API-KEY': this.apiKey || ""
                 }
@@ -106,7 +107,7 @@ export class X2Y2API extends BaseFetch {
             }
             // console.log(this.apiBaseUrl + "/api/orders/add", singSellOrder)
             const result = await this.post(
-                `/api/orders/add`,
+                `/orders/add`,
                 order,
                 opts
             ).catch((e: any) => {
@@ -124,24 +125,17 @@ export class X2Y2API extends BaseFetch {
         }
     }
 
-    async getOrderSign(order: { account: string, orderId: number, price: string }): Promise<{ order_id: number; input: string }[]> {
-        const {account, orderId, price} = order
-        const OP_COMPLETE_SELL_OFFER = 1
+    async getRunInput(order: { account: string, items: { orderId: number, price: string, currency: string }[] }): Promise<{ order_id: number; input: string }[]> {
+        const {account, items} = order
         const payload = {
             "caller": account,
             "op": OP_COMPLETE_SELL_OFFER,
             "amountToEth": "0",
             "amountToWeth": "0",
-            "items": [
-                {
-                    orderId,
-                    price,
-                    "currency": "0x0000000000000000000000000000000000000000"
-                }
-            ]
+            items
         }
 
-        const data = await this.post(`/api/orders/sign`, payload, {
+        const data = await this.post(`/orders/sign`, payload, {
             headers: {
                 'X-API-KEY': this.apiKey || ""
             }
@@ -152,6 +146,29 @@ export class X2Y2API extends BaseFetch {
         return (data ?? []) as { order_id: number; input: string }[]
         // const input = inputData.find(d => d.order_id === orderId)
         // return input
+    }
+
+    async getCancelInput(order: { account: string, orderIds: string[], signMessage, sign }): Promise<string> {
+        const items = order.orderIds.map(val => ({orderId: Number(val)}))
+        const payload = {
+            caller: order.account,
+            op: OP_CANCEL_OFFER,
+            items,
+            sign_message: order.signMessage,
+            sign: order.sign
+        }
+
+        // console.log(this.apiBaseUrl, payload)
+        const data = await this.post(`/orders/cancel`, payload, {
+            headers: {
+                'X-API-KEY': this.apiKey || ""
+            }
+        }).catch((e: any) => {
+            console.log(e)
+            throw new Error(e)
+        })
+
+        return data.input
     }
 
     // export type OrderDetailResp = {

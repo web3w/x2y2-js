@@ -29,10 +29,6 @@
     /* Skip type checking of declaration files. */
     "forceConsistentCasingInFileNames": true,
     /* Disallow inconsistently-cased references to the same file. */
-    "typeRoots": [
-      "node_modules/@0x/typescript-typings/types",
-      "node_modules/@types"
-    ],
     "downlevelIteration": true,
     "lib": [
       "es5",

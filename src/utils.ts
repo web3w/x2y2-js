@@ -1,9 +1,22 @@
 import {ethers, utils} from "ethers";
-import {X2Y2Order} from "@x2y2-io/sdk/dist/types";
-import {DELEGATION_TYPE_ERC721, INTENT_SELL} from "@x2y2-io/sdk";
-import {RunInput} from "./types";
+import {CancelInput, RunInput, X2Y2Order} from "./types";
+
+export const OP_COMPLETE_SELL_OFFER = 1 // COMPLETE_SELL_OFFER
+export const OP_COMPLETE_BUY_OFFER = 2 // COMPLETE_BUY_OFFER
+export const OP_CANCEL_OFFER = 3 // CANCEL_OFFER
+export const OP_BID = 4 // BID
+export const OP_COMPLETE_AUCTION = 5 // COMPLETE_AUCTION
+export const OP_REFUND_AUCTION = 6 // REFUND_AUCTION
+export const OP_REFUND_AUCTION_STUCK_ITEM = 7 // REFUND_AUCTION_STUCK_ITEM
 
 
+export const DELEGATION_TYPE_INVALID = 0
+export const DELEGATION_TYPE_ERC721 = 1
+export const DELEGATION_TYPE_ERC1155 = 2
+
+export const INTENT_SELL = 1
+export const INTENT_AUCTION = 2
+export const INTENT_BUY = 3
 
 export function randomSalt(): string {
     const randomHex = ethers.BigNumber.from(ethers.utils.randomBytes(16)).toHexString()
@@ -102,19 +115,26 @@ export function makeSellOrder(
 
 const cancelInputParamType = `tuple(bytes32[] itemHashes, uint256 deadline, uint8 v, bytes32 r, bytes32 s)`
 
+export function decodeCancelInput(input: string): CancelInput {
+    return ethers.utils.defaultAbiCoder.decode(
+        [cancelInputParamType],
+        input
+    )[0] as CancelInput
+}
+
 
 // const orderItemParamType = `tuple(uint256 price, bytes data)`
 // const orderParamType = `tuple(uint256 salt, address user, uint256 network, uint256 intent, uint256 delegateType, uint256 deadline, address currency, bytes dataMask, ${orderItemParamType}[] items, bytes32 r, bytes32 s, uint8 v, uint8 signVersion)`
 //
-const feeParamType = `tuple(uint256 percentage, address to)`
-const settleDetailParamType = `tuple(uint8 op, uint256 orderIdx, uint256 itemIdx, uint256 price, bytes32 itemHash, address executionDelegate, bytes dataReplacement, uint256 bidIncentivePct, uint256 aucMinIncrementPct, uint256 aucIncDurationSecs, ${feeParamType}[] fees)`
-const settleSharedParamType = `tuple(uint256 salt, uint256 deadline, uint256 amountToEth, uint256 amountToWeth, address user, bool canFail)`
-const runInputParamType = `tuple(${orderParamType}[] orders, ${settleDetailParamType}[] details, ${settleSharedParamType} shared, bytes32 r, bytes32 s, uint8 v)`
-
-
-export function decodeRunInput(data: string): RunInput {
-    return ethers.utils.defaultAbiCoder.decode(
-        [runInputParamType],
-        data
-    )[0] as RunInput
-}
+// const feeParamType = `tuple(uint256 percentage, address to)`
+// const settleDetailParamType = `tuple(uint8 op, uint256 orderIdx, uint256 itemIdx, uint256 price, bytes32 itemHash, address executionDelegate, bytes dataReplacement, uint256 bidIncentivePct, uint256 aucMinIncrementPct, uint256 aucIncDurationSecs, ${feeParamType}[] fees)`
+// const settleSharedParamType = `tuple(uint256 salt, uint256 deadline, uint256 amountToEth, uint256 amountToWeth, address user, bool canFail)`
+// const runInputParamType = `tuple(${orderParamType}[] orders, ${settleDetailParamType}[] details, ${settleSharedParamType} shared, bytes32 r, bytes32 s, uint8 v)`
+//
+//
+// export function decodeRunInput(data: string): RunInput {
+//     return ethers.utils.defaultAbiCoder.decode(
+//         [runInputParamType],
+//         data
+//     )[0] as RunInput
+// }

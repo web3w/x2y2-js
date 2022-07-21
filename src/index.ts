@@ -4,7 +4,7 @@ import {
     addressesByNetwork
 } from "./config";
 import EventEmitter from 'events'
-import {Contract, ethers, utils} from "ethers"
+import {BigNumber, Contract, ethers, utils} from "ethers"
 import {
     AdjustOrderParams,
     APIConfig, Asset,
@@ -21,7 +21,15 @@ import {
 import {LimitedCallSpec, splitECSignature, WalletInfo} from 'web3-wallets'
 import {Web3Accounts, X2Y2Order} from "./types";
 import {X2Y2API} from "./api";
-import {decodeItemData, decodeOrder, encodeItemData, encodeOrder, getOrderHash, makeSellOrder} from "./utils";
+import {
+    decodeCancelInput,
+    decodeItemData,
+    decodeOrder,
+    encodeItemData,
+    encodeOrder,
+    getOrderHash,
+    makeSellOrder
+} from "./utils";
 import {Web3ABICoder} from "web3-abi-coder";
 
 
@@ -80,13 +88,13 @@ export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
         const accountAddress = this.walletInfo.address
         const {tokenAddress, tokenId} = asset
         const ERC721Delegate = this.erc721Delegate
-        const approve = await this.userAccount.getERC721Approved(tokenAddress, this.erc721Delegate)
-        if (!approve) {
+        const approve = await this.userAccount.getAssetApprove(asset, this.erc721Delegate)
+        if (!approve.isApprove && approve.balances != "0") {
             const txWait = await this.userAccount.approveERC721Proxy(tokenAddress, ERC721Delegate)
             await txWait.wait()
         }
 
-        if (!tokenId) throw new Error("Token id undefined")
+        if (!tokenId || approve.balances == "0") throw new Error("Token id does not belong to you")
         const data = encodeItemData([{token: tokenAddress, tokenId}])
         const price = ethers.utils.parseUnits(startAmount.toString(), paymentToken.decimals).toString()
         const sellOrder: X2Y2Order = makeSellOrder(
@@ -111,7 +119,7 @@ export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
             taker: buyerAddress
         }
 
-        // royalties: [],
+        //
         // isPrivate: false,
         // taker: null,
 
@@ -164,24 +172,57 @@ export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
     async fulfillOrder(orderId: string, option?: MatchOrderOption) {
         // const orderId = 5226088// res.orders[0].id;
         const price = ethers.utils.parseEther("0.11").toString()
-        const inputs = await this.api.getOrderSign({account: this.walletInfo.address, orderId: Number(orderId), price})
-        const runParams = this.exchangeCoder.decodeInputParams("run", inputs[0].input)
+        const items: {
+            orderId: number
+            currency: string
+            price: string
+        }[] = [{
+            orderId: Number(orderId),
+            price,
+            "currency": "0x0000000000000000000000000000000000000000"
+        }]
+        const inputs = await this.api.getRunInput({account: this.walletInfo.address, items})
+        const inputParams = inputs[0].input
+        const runParams = this.exchangeCoder.decodeInputParams("run", inputParams)
+        console.log(runParams)
+
+        this.userAccount.ethSend({
+            from: this.walletInfo.address,
+            to: this.exchange.address,
+            data: "0x357a150b" + inputParams.substring(10, inputParams.length)
+        })
     }
 
     async fulfillOrders(orders: MatchOrdersParams) {
 
     }
 
-    async cancelOrders(nonces: string[]) {
-        if (nonces.length == 0) {
-            throw new Error('LooksRare  cancelOrders eq 0')
-        }
-        return this.exchange.cancelMultipleMakerOrders(nonces)
+    async cancelOrders(orderIds: string[]) {
+        const signMessage = ethers.utils.keccak256(this.walletInfo.address)
+        const sign = await this.userAccount.signMessage(signMessage)
+        const input = await this.api.getCancelInput({account: this.walletInfo.address, orderIds, sign, signMessage})
+        console.log(input)
+        // const decoder = decodeCancelInput(input)
+        // console.log(decoder)
+        // const cancelType = this.exchangeCoder.getFunctionSignature('cancel')
+        // console.log(ethers.utils.defaultAbiCoder.decode(
+        //     cancelType,
+        //     input
+        // ))
+        const inputParams = input.substring(66, input.length)
+        const cancelParams = this.exchangeCoder.decodeInputParams("cancel", "0x" + inputParams)
+        console.log(cancelParams)
+
+        return this.userAccount.ethSend({
+            from: this.walletInfo.address,
+            to: this.exchange.address,
+            data: "0x2295f9bf" + inputParams
+        })
+
     }
 
-    async cancelAllOrders(nonec?: string) {
-        const minNonce = nonec || await this.exchange.userMinOrderNonce(this.walletInfo.address)
-        return this.exchange.cancelAllOrdersForSender(minNonce)
+    async cancelAllOrders(nonce?: string) {
+
     }
 
     async postOrder(orderStr: string) {

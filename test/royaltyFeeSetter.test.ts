@@ -15,9 +15,10 @@ const wallet = {
 const sdk = new X2Y2SDK(wallet,{apiKey:secrets.x2y2ApiKey});
 ; // @ts-ignore
 (async () => {
-    const tx = await sdk.getAssetsFees([
-        "0x52F687B1c6aACC92b47DA5209cf25D987C876628",
-        "0x6b0d7ed64d8facde81b76f8ea6598808ee93fb0b"])
+    //
+    // "0x52F687B1c6aACC92b47DA5209cf25D987C876628",
+
+    const tx = await sdk.getAssetsFees(["0x6b0d7ed64d8facde81b76f8ea6598808ee93fb0b"])
     console.log(tx)
 
 })()

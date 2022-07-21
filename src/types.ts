@@ -107,3 +107,12 @@ export type RunInput = {
     s: string
     v: number
 }
+
+export type CancelInput = {
+    itemHashes: string[]
+    deadline: BigNumberish
+    // signature
+    r: string
+    s: string
+    v: number
+}

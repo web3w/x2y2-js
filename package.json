@@ -1,0 +1,42 @@
+{
+  "name": "x2y2-js",
+  "version": "1.0.5",
+  "description": "Javascript SDK for the looksrare protocol",
+  "main": "lib/index.js",
+  "type": "lib/index.d.ts",
+  "author": "Web3 Project Developers",
+  "license": "MIT",
+  "homepage": "https://www.npmjs.com/package/looksrare-js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/web3w/looksrare-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/web3w/looksrare-js/issues"
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "release": "tsc && npm publish && git tag $npm_package_version && git push --tag",
+    "start": "tsc -w -p tsconfig.json",
+    "link": "sudo npm link x2y2-js"
+  },
+  "dependencies": {
+    "@looksrare/sdk": "^0.7.4",
+    "@x2y2-io/sdk": "^0.1.5",
+    "axios": "^0.27.2",
+    "web3-abi-coder": "^1.1.6",
+    "web3-accounts": "^1.2.19",
+    "web3-assert": "^1.0.2",
+    "web3-signer-provider": "^1.1.15",
+    "web3-wallets": "^2.1.18"
+  },
+  "devDependencies": {
+    "ts-node": "~10.7.0",
+    "typescript": "~4.6.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

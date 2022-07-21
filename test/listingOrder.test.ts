@@ -38,7 +38,7 @@ const chainId = 1;
             royaltyFeeAddress: ""
         }
     } as Asset
-    const orderStr = await sdk.createSellOrder({
+    const order = await sdk.createSellOrder({
         asset,
         quantity: 1,
         paymentToken: NullToken,
@@ -46,7 +46,7 @@ const chainId = 1;
         expirationTime: Math.round(Date.now() / 1000) + 3600
     })
     const api = new X2Y2API({apiKey: secrets.x2y2ApiKey})
-    const orderRes = await api.postOrder(orderStr)
+    const orderRes = await api.postOrder(JSON.stringify(order))
     console.log(orderRes)
 
 })()

@@ -1,6 +1,6 @@
 {
   "name": "x2y2-js",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "description": "Javascript SDK for the x2y2 protocol",
   "main": "lib/index.js",
   "type": "lib/index.d.ts",
@@ -24,10 +24,10 @@
   },
   "dependencies": {
     "web3-abi-coder": "^1.1.6",
-    "web3-accounts": "^1.2.19",
+    "web3-accounts": "^1.2.20",
     "web3-assert": "^1.0.2",
     "web3-signer-provider": "^1.1.15",
-    "web3-wallets": "^2.1.18"
+    "web3-wallets": "^2.1.19"
   },
   "devDependencies": {
     "@types/node": "^18.0.6",

@@ -96,7 +96,8 @@ export class X2Y2API extends BaseFetch {
 
     }
 
-    async postOrder(order: any, retries = 2): Promise<any> {
+    async postOrder(orderStr: string, retries = 2): Promise<any> {
+        const order = JSON.parse(orderStr)
         try {
             const opts = {
                 headers: {

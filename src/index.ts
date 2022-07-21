@@ -22,7 +22,6 @@ import {LimitedCallSpec, splitECSignature, WalletInfo} from 'web3-wallets'
 import {Web3Accounts, X2Y2Order} from "./types";
 import {X2Y2API} from "./api";
 import {
-    decodeCancelInput,
     decodeItemData,
     decodeOrder,
     encodeItemData,
@@ -119,10 +118,6 @@ export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
             taker: buyerAddress
         }
 
-        //
-        // isPrivate: false,
-        // taker: null,
-
         return singSellOrder
     }
 
@@ -201,7 +196,7 @@ export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
         const signMessage = ethers.utils.keccak256(this.walletInfo.address)
         const sign = await this.userAccount.signMessage(signMessage)
         const input = await this.api.getCancelInput({account: this.walletInfo.address, orderIds, sign, signMessage})
-        console.log(input)
+        // console.log(input)
         // const decoder = decodeCancelInput(input)
         // console.log(decoder)
         // const cancelType = this.exchangeCoder.getFunctionSignature('cancel')
@@ -210,8 +205,8 @@ export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
         //     input
         // ))
         const inputParams = input.substring(66, input.length)
-        const cancelParams = this.exchangeCoder.decodeInputParams("cancel", "0x" + inputParams)
-        console.log(cancelParams)
+        // const cancelParams = this.exchangeCoder.decodeInputParams("cancel", "0x" + inputParams)
+        // console.log(cancelParams)
 
         return this.userAccount.ethSend({
             from: this.walletInfo.address,

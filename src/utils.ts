@@ -1,5 +1,6 @@
 import {ethers, utils} from "ethers";
 import {CancelInput, RunInput, X2Y2Order} from "./types";
+import {NULL_ADDRESS} from "web3-wallets";
 
 export const OP_COMPLETE_SELL_OFFER = 1 // COMPLETE_SELL_OFFER
 export const OP_COMPLETE_BUY_OFFER = 2 // COMPLETE_BUY_OFFER
@@ -88,10 +89,10 @@ export function decodeOrder(order: string) {
 export function makeSellOrder(
     chainId: number,
     user: string,
-    expirationTime: number,
+    deadline: number,
     items: { price: string; data: string }[]
 ) {
-    if (expirationTime < Math.round(Date.now() / 1000) + 900) {
+    if (deadline < Math.round(Date.now() / 1000) + 900) {
         throw new Error('The expiration time has to be 15 minutes later.')
     }
     const salt = randomSalt()
@@ -101,8 +102,8 @@ export function makeSellOrder(
         network: chainId,
         intent: INTENT_SELL,
         delegateType: DELEGATION_TYPE_ERC721,
-        deadline: expirationTime,
-        currency: ethers.constants.AddressZero,
+        deadline,
+        currency: NULL_ADDRESS,
         dataMask: '0x',
         items,
         r: '',
@@ -110,6 +111,34 @@ export function makeSellOrder(
         v: 0,
         signVersion: 1,
     }
+}
+
+export function makeBuyOrder(
+    chainId: number,
+    user: string,
+    currency:string,
+    deadline: number,
+    dataMask:string,
+    items: { price: string; data: string }[]
+) {
+    const salt = randomSalt()
+
+    const order: X2Y2Order = {
+        salt,
+        user,
+        network: chainId,
+        intent: INTENT_BUY,
+        delegateType: DELEGATION_TYPE_ERC721,
+        deadline,
+        currency,
+        dataMask,
+        items,
+        r: '',
+        s: '',
+        v: 0,
+        signVersion: 1,
+    }
+    return order
 }
 
 

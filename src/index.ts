@@ -1,33 +1,28 @@
 // 一口价购买
-import {
-    exchangeABI,
-    addressesByNetwork
-} from "./config";
+import {addressesByNetwork, exchangeABI} from "./config";
 import EventEmitter from 'events'
-import {BigNumber, Contract, ethers, utils} from "ethers"
+import {Contract, ethers} from "ethers"
 import {
     AdjustOrderParams,
-    APIConfig, Asset,
+    APIConfig,
     BuyOrderParams,
     CreateOrderParams,
-    ExchangetAgent, FeesInfo,
+    ExchangetAgent,
+    FeesInfo,
     MatchOrderOption,
-    MatchOrdersParams,
-    MatchParams, NullToken,
+    MatchParams,
+    NullToken,
+    OfferType,
     OrderSide,
-    SellOrderParams, Token, tokenToAsset, transactionToCallData,
+    SellOrderParams,
+    Token,
+    tokenToAsset,
+    transactionToCallData,
 } from 'web3-accounts'
 import {LimitedCallSpec, NULL_ADDRESS, splitECSignature, WalletInfo} from 'web3-wallets'
 import {Order, Web3Accounts, X2Y2Order} from "./types";
 import {X2Y2API} from "./api";
-import {
-    decodeItemData,
-    decodeOrder,
-    encodeItemData,
-    encodeOrder,
-    getOrderHash,
-    makeSellOrder
-} from "./utils";
+import {encodeItemData, encodeOrder, getOrderHash, makeBuyOrder, makeSellOrder} from "./utils";
 import {Web3ABICoder} from "web3-abi-coder";
 import pkg from '../package.json'
 
@@ -118,10 +113,9 @@ export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
 
         const accountAddress = this.walletInfo.address
         const {tokenAddress, tokenId} = asset
-        const ERC721Delegate = this.erc721Delegate
         const approve = await this.userAccount.getAssetApprove(asset, this.erc721Delegate)
-        if (!approve.isApprove && approve.balances != "0") {
-            const txWait = await this.userAccount.approveERC721Proxy(tokenAddress, ERC721Delegate)
+        if (!approve.isApprove && approve.balances != "0" && approve.calldata) {
+            const txWait = await this.userAccount.ethSend(approve.calldata)
             await txWait.wait()
         }
 
@@ -157,7 +151,59 @@ export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
     }
 
     async createBuyOrder(params: BuyOrderParams): Promise<any> {
+        const {asset, startAmount, offerType, expirationTime} = params
         const paymentToken = params.paymentToken || this.GasWarpperToken
+
+        const erc20 = tokenToAsset(paymentToken)
+        const approve = await this.userAccount.getAssetApprove(erc20, this.exchange.address)
+        if (!approve.isApprove && approve.balances != "0" && approve.calldata) {
+            const txWait = await this.userAccount.ethSend(approve.calldata)
+            await txWait.wait()
+        }
+
+        const accountAddress = this.walletInfo.address
+        const {tokenAddress, tokenId} = asset
+
+        if (approve.balances == "0") throw new Error("Unpaid payment token")
+
+        const price = ethers.utils.parseUnits(startAmount.toString(), paymentToken.decimals).toString()
+
+        const isCollection = offerType == OfferType.ContractOffer
+
+        const dataTokenId = isCollection ? '0' : tokenId ?? '0'
+        const itemData = encodeItemData([
+            {token: tokenAddress, tokenId: dataTokenId},
+        ])
+
+        // dataMask
+        const mask = [
+            {token: NULL_ADDRESS, tokenId: '0x' + '1'.repeat(64)},
+        ]
+        const dataMask = isCollection ? encodeItemData(mask) : '0x'
+
+        const buyOrder: X2Y2Order = makeBuyOrder(
+            this.walletInfo.chainId,
+            accountAddress,
+            paymentToken.address,
+            expirationTime,
+            dataMask,
+            [{price, data: itemData}]
+        )
+
+        const orderHash = getOrderHash(buyOrder)
+        const orderSign = await this.userAccount.signMessage(orderHash)
+        const vrs = splitECSignature(orderSign)
+        const order: X2Y2Order = {...buyOrder, v: vrs.v, r: vrs.r, s: vrs.s}
+
+        return {
+            order: encodeOrder(order),
+            bundleName: "",
+            bundleDesc: "",
+            orderIds: [],
+            changePrice: false,
+            isCollection,
+            isBundle: false
+        }
     }
 
     async adjustOrder(params: AdjustOrderParams) {

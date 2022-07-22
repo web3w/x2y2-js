@@ -1,12 +1,10 @@
 import {
-    APIConfig, X2Y2Order, SettleDetail, SettleShared, sleep, BaseFetch
+    APIConfig, BaseFetch
 } from "./types";
 
 import {OP_COMPLETE_SELL_OFFER, OP_CANCEL_OFFER} from "./utils";
 
 export const X2Y2_API_KEY = "xx-xx" //2.5%
-
-export const X2Y2_PROTOCOL_FEE_POINTS = 50
 //Api Timeout
 export const API_TIMEOUT = 10000
 
@@ -79,7 +77,7 @@ export class X2Y2API extends BaseFetch {
             //base rate is 1e6
             const json = await this.post(`/contracts/payment_info`, params, {
                 headers: {
-                    'X-API-KEY': this.apiKey || ""
+                    'X-API-KEY': this.apiKey || X2Y2_API_KEY
                 }
             }).catch((e: any) => {
                 console.log(e)
@@ -102,7 +100,7 @@ export class X2Y2API extends BaseFetch {
             const opts = {
                 headers: {
                     'Content-Type': 'application/json; charset=utf-8',
-                    'X-API-KEY': this.apiKey || ""
+                    'X-API-KEY': this.apiKey || X2Y2_API_KEY
                 }
             }
             const result = await this.post(
@@ -133,7 +131,7 @@ export class X2Y2API extends BaseFetch {
 
         const data = await this.post(`/orders/sign`, payload, {
             headers: {
-                'X-API-KEY': this.apiKey || ""
+                'X-API-KEY': this.apiKey || X2Y2_API_KEY
             }
         }).catch((e: any) => {
             console.log(e)
@@ -157,7 +155,7 @@ export class X2Y2API extends BaseFetch {
         // console.log(this.apiBaseUrl, payload)
         const data = await this.post(`/orders/cancel`, payload, {
             headers: {
-                'X-API-KEY': this.apiKey || ""
+                'X-API-KEY': this.apiKey || X2Y2_API_KEY
             }
         }).catch((e: any) => {
             console.log(e)

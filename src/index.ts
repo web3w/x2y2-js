@@ -30,7 +30,10 @@ import {
     makeSellOrder
 } from "./utils";
 import {Web3ABICoder} from "web3-abi-coder";
+import pkg from '../package.json'
 
+const oneDay = Math.round((Date.now() / 1000 + (3600 + 240)))
+const twentySeconds = Math.round(Date.now() / 1000 + 900)
 
 export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
     public contracts: any
@@ -42,10 +45,12 @@ export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
     public GasWarpperToken: Token
     public erc721Delegate: string
     public exchangeCoder: Web3ABICoder
+    public version: string
 
     // 初始化SDK
     constructor(wallet: WalletInfo, config?: APIConfig) {
         super()
+        this.version = pkg.version
         this.userAccount = new Web3Accounts(wallet)
         this.api = new X2Y2API({...config, chainId: wallet.chainId})
         this.walletInfo = wallet
@@ -92,6 +97,7 @@ export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
     async createSellOrder(params: SellOrderParams): Promise<any> {
         const {asset, startAmount, quantity, expirationTime, buyerAddress} = params
         const paymentToken = params.paymentToken || NullToken
+
         const accountAddress = this.walletInfo.address
         const {tokenAddress, tokenId} = asset
         const ERC721Delegate = this.erc721Delegate
@@ -104,10 +110,13 @@ export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
         if (!tokenId || approve.balances == "0") throw new Error("Token id does not belong to you")
         const data = encodeItemData([{token: tokenAddress, tokenId}])
         const price = ethers.utils.parseUnits(startAmount.toString(), paymentToken.decimals).toString()
+
+        const deadline = expirationTime || oneDay
+
         const sellOrder: X2Y2Order = makeSellOrder(
             this.walletInfo.chainId,
             accountAddress,
-            expirationTime,
+            deadline,
             [{price, data}]
         )
         const orderHash = getOrderHash(sellOrder)
@@ -145,8 +154,8 @@ export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
 
         // const itemData =""
         const itemData = encodeItemData([{token: tokenAddress, tokenId}])
-        if (Number(expirationTime) < (Date.now() / 1000 + 900)) {
-            expirationTime = Math.round((Date.now() / 1000 + (3600 + 240)))
+        if (Number(expirationTime) < twentySeconds) {
+            expirationTime = oneDay
         }
 
         const sellOrder: X2Y2Order = makeSellOrder(
@@ -155,6 +164,8 @@ export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
             expirationTime,
             [{price: params.basePrice, data: itemData}]
         )
+
+
         const orderHash = getOrderHash(sellOrder)
         const orderSign = await this.userAccount.signMessage(orderHash)
         const vrs = splitECSignature(orderSign)

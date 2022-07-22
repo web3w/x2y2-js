@@ -52,12 +52,20 @@ const chainId = 1;
         tokenAddress: order.nft.token,
         tokenId: order.nft.token_id
     }
-    const lowOrder = await sdk.adjustOrder({
+
+    const params = {
         orderStr: JSON.stringify(lowPriceorder),
         basePrice: ethers.utils.parseEther("0.91").toString(),
         royaltyFeeAddress: "",
         royaltyFeePoints: 0
-    })
+    }
+    const params1 ={
+        "orderStr": "{\"orderId\":\"5397190\",\"expirationTime\":1658509147,\"basePrice\":\"119000000000000000\",\"tokenAddress\":\"0x6d77496b7c143d183157e8b979e47a0a0180e86b\",\"tokenId\":\"1\"}",
+        "basePrice": "20000000000000000",
+        "royaltyFeePoints": 0,
+        "royaltyFeeAddress": ""
+    }
+    const lowOrder = await sdk.adjustOrder(params1)
 
     const orderRes = await api.postOrder(JSON.stringify(lowOrder))
     console.log(orderRes)

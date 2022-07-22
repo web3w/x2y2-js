@@ -14,9 +14,9 @@ import {
     ExchangetAgent, FeesInfo,
     MatchOrderOption,
     MatchOrdersParams,
-    MatchParams,
+    MatchParams, NullToken,
     OrderSide,
-    SellOrderParams, tokenToAsset,
+    SellOrderParams, Token, tokenToAsset,
 } from 'web3-accounts'
 import {LimitedCallSpec, splitECSignature, WalletInfo} from 'web3-wallets'
 import {Web3Accounts, X2Y2Order} from "./types";
@@ -39,6 +39,7 @@ export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
     public api: X2Y2API
     public contractAddresses: any
     public exchange: Contract
+    public GasWarpperToken: Token
     public erc721Delegate: string
     public exchangeCoder: Web3ABICoder
 
@@ -53,6 +54,12 @@ export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
         this.exchange = new Contract(contractAddresses.EXCHANGE, exchangeABI, this.userAccount.signer)
         this.erc721Delegate = contractAddresses.ERC721Delegate
         this.exchangeCoder = new Web3ABICoder(exchangeABI)
+        this.GasWarpperToken = {
+            name: 'GasToken',
+            symbol: 'GasToken',
+            address: contractAddresses.WETH,
+            decimals: 18
+        }
     }
 
     async getOrderApprove(params: CreateOrderParams, side: OrderSide) {
@@ -83,7 +90,8 @@ export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
     }
 
     async createSellOrder(params: SellOrderParams): Promise<any> {
-        const {asset, startAmount, quantity, expirationTime, paymentToken, buyerAddress} = params
+        const {asset, startAmount, quantity, expirationTime, buyerAddress} = params
+        const paymentToken = params.paymentToken || NullToken
         const accountAddress = this.walletInfo.address
         const {tokenAddress, tokenId} = asset
         const ERC721Delegate = this.erc721Delegate
@@ -121,29 +129,31 @@ export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
         return singSellOrder
     }
 
-    async createBuyOrder(order: BuyOrderParams): Promise<any> {
-
+    async createBuyOrder(params: BuyOrderParams): Promise<any> {
+        const paymentToken = params.paymentToken || this.GasWarpperToken
     }
 
     async adjustOrder(params: AdjustOrderParams) {
-        const oldOrderParams = JSON.parse(params.orderStr)
-        const oldOrder = decodeOrder(oldOrderParams.order)[0]
-        const item = oldOrder.items[0]
-        const {token, tokenId} = decodeItemData(item.data)[0][0]
+        let {orderId, expirationTime, basePrice, tokenAddress, tokenId} = JSON.parse(params.orderStr)
 
         const maker = this.walletInfo.address
-        const list = await this.api.getOrders({maker, tokenAddress: token, tokenId: tokenId.toString()})
+        const oldPrice = ethers.BigNumber.from(basePrice)
+        const newPrice = ethers.BigNumber.from(params.basePrice)
+        if (newPrice.gte(oldPrice)) {
+            throw new Error('Must be lower than the current price.')
+        }
 
-        // const oldPrice = item.price
-        // const newPrice = ethers.BigNumber.from(params.basePrice)
-        // if (newPrice.gte(oldPrice)) {
-        //     throw new Error('Must be lower than the current price.')
-        // }
+        // const itemData =""
+        const itemData = encodeItemData([{token: tokenAddress, tokenId}])
+        if (Number(expirationTime) < (Date.now() / 1000 + 900)) {
+            expirationTime = Math.round((Date.now() / 1000 + (3600 + 240)))
+        }
+
         const sellOrder: X2Y2Order = makeSellOrder(
             this.walletInfo.chainId,
             maker,
-            params.expirationTime ?? parseInt(oldOrder.deadline),
-            [{price: params.basePrice, data: item.data}]
+            expirationTime,
+            [{price: params.basePrice, data: itemData}]
         )
         const orderHash = getOrderHash(sellOrder)
         const orderSign = await this.userAccount.signMessage(orderHash)
@@ -155,9 +165,7 @@ export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
             "isBundle": false,
             "bundleName": "",
             "bundleDesc": "",
-            "orderIds": [
-                list.orders[0].id
-            ],
+            "orderIds": [orderId],
             "changePrice": true,
             "isCollection": false
         }
@@ -179,8 +187,6 @@ export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
         const inputs = await this.api.getRunInput({account: this.walletInfo.address, items})
         const inputParams = inputs[0].input
         const runParams = this.exchangeCoder.decodeInputParams("run", inputParams)
-        console.log(runParams)
-
         this.userAccount.ethSend({
             from: this.walletInfo.address,
             to: this.exchange.address,
@@ -196,18 +202,7 @@ export class X2Y2SDK extends EventEmitter implements ExchangetAgent {
         const signMessage = ethers.utils.keccak256(this.walletInfo.address)
         const sign = await this.userAccount.signMessage(signMessage)
         const input = await this.api.getCancelInput({account: this.walletInfo.address, orderIds, sign, signMessage})
-        // console.log(input)
-        // const decoder = decodeCancelInput(input)
-        // console.log(decoder)
-        // const cancelType = this.exchangeCoder.getFunctionSignature('cancel')
-        // console.log(ethers.utils.defaultAbiCoder.decode(
-        //     cancelType,
-        //     input
-        // ))
         const inputParams = input.substring(66, input.length)
-        // const cancelParams = this.exchangeCoder.decodeInputParams("cancel", "0x" + inputParams)
-        // console.log(cancelParams)
-
         return this.userAccount.ethSend({
             from: this.walletInfo.address,
             to: this.exchange.address,

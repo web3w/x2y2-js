@@ -17,7 +17,7 @@ const chainId = 1;
         address: seller,
         privateKeys: secrets.privateKeys
     }
-    const sdk = new X2Y2SDK(wallet,{apiKey: secrets.x2y2ApiKey})
+    const sdk = new X2Y2SDK(wallet, {apiKey: secrets.x2y2ApiKey})
 
     // const tokenAddress = "0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF"
     // const tokenId = "1120101"
@@ -28,24 +28,38 @@ const chainId = 1;
         tokenId,
         schemaName: "ERC721"
     } as Asset
-    const order = await sdk.createSellOrder({
+    const sellOrder = await sdk.createSellOrder({
         asset,
         quantity: 1,
         paymentToken: NullToken,
-        startAmount: 0.99,
+        startAmount: 0.96,
         expirationTime: Math.round(Date.now() / 1000) + 1000
     })
     const api = new X2Y2API({apiKey: secrets.x2y2ApiKey})
-    // const postOrderRes = await api.postOrder(order)
+    // const postOrderRes = await api.postOrder(JSON.stringify(sellOrder))
 
+    const orderList = await api.getOrders({
+        maker: seller,
+        tokenAddress,
+        tokenId
+    })
+    const order = orderList.orders[0]
+
+    const lowPriceorder = {
+        orderId: order.id,
+        expirationTime: order.end_at,
+        basePrice: order.price,
+        tokenAddress: order.nft.token,
+        tokenId: order.nft.token_id
+    }
     const lowOrder = await sdk.adjustOrder({
-        orderStr: JSON.stringify(order),
-        basePrice: ethers.utils.parseEther("0.98").toString(),
+        orderStr: JSON.stringify(lowPriceorder),
+        basePrice: ethers.utils.parseEther("0.91").toString(),
         royaltyFeeAddress: "",
         royaltyFeePoints: 0
     })
 
-    const orderRes = await api.postOrder(lowOrder)
+    const orderRes = await api.postOrder(JSON.stringify(lowOrder))
     console.log(orderRes)
 
 })()

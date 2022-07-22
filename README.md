@@ -19,7 +19,7 @@ import {X2Y2SDK} from 'x2y2-js'
 import {Web3Wallets} from 'web3-wallets'
 
 const {chainId, address} = new Web3Wallets('metamask')
-const x2y2 = new X2Y2SDK({chainId, address})
+const x2y2 = new X2Y2SDK({chainId, address},{apiKey:"xx-xx-xx"})
 
 ```
 
@@ -86,19 +86,8 @@ You can fetch an asset using the `OpenSeaAPI`, which will return an `OpenSeaAsse
 extends `Asset`):
 
 ```TypeScript
-
-
-
-
-const assetsQuery = {
-    assets: [{
-        asset_contract_addresses,  // string
-        token_ids //string | number | null
-    }],
-    include_orders: true,
-} as AssetsQueryParams
-
-const assetFee = await x2y2.getAssetsFees([asset_contract_addresses])
+ 
+const assetFee = await x2y2.getAssets([asset_contract_addresses])
 
 ```
 
@@ -117,7 +106,7 @@ const asset = {
     schemaName: 'ERC721'
 }
 
-const balance = await x2y2.getAssetBalances(asset, accountAddress)
+const balance = await x2y2.userAccount.getAssetBalances(asset, accountAddress)
 
 ```
 
@@ -215,33 +204,6 @@ const {orders, count} = await x2y2.api.getOrders({
 const {orders, count} = await x2y2.getOwnerOrders()
 ```
 
-Note that the listing price of an asset is equal to the `currentPrice` of the **lowest valid sell order** on the asset.
-Users can lower their listing price without invalidating previous sell orders, so all get shipped down until they're
-cancelled or one is fulfilled.
-
-To learn more about signatures, makers, takers, listingTime vs createdTime and other kinds of order terminology, please
-read the [**Terminology Section**](https://docs.opensea.io/reference#terminology) of the API Docs.
-
-The available API filters for the orders endpoint is documented in the `OrderJSON` interface below, but see the
-main [API Docs](https://docs.opensea.io/reference#reference-getting-started) for a playground, along with more
-up-to-date and detailed explanantions.
-
-```TypeScript
-/**
- * Attrs used by orderbook to make queries easier
- * More to come soon!
- */
-maker ? : string, // Address of the order's creator
-    taker ? : string, // The null address if anyone is allowed to take the order
-    side ? : OrderSide, // 0 for offers, 1 for auctions
-    owner ? : string, // Address of owner of the order's asset 
-    asset_contract_address ? : string, // Contract address for order's asset 
-    token_ids ? : Array < number | string >
-
-    // For pagination
-    limit ? : number,
-    offset ? : number
-```
 
 ### Buying Items
 
@@ -291,7 +253,7 @@ To transfer an ERC-721 asset or an ERC-1155 asset, it's just one call:
 
 ```JavaScript
 
-const transactionHash = await x2y2.transfer({
+const transactionHash = await x2y2.userAccount.transfer({
     asset: {tokenId, tokenAddress},
     fromAddress, // Must own the asset
     toAddress
@@ -303,7 +265,7 @@ once:
 
 ```JavaScript
 
-const transactionHash = await x2y2.transfer({
+const transactionHash = await x2y2.userAccount.transfer({
     asset: {
         tokenId,
         tokenAddress,

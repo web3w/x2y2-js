@@ -105,7 +105,6 @@ export class X2Y2API extends BaseFetch {
                     'X-API-KEY': this.apiKey || ""
                 }
             }
-            // console.log(this.apiBaseUrl + "/api/orders/add", singSellOrder)
             const result = await this.post(
                 `/orders/add`,
                 order,
@@ -119,9 +118,6 @@ export class X2Y2API extends BaseFetch {
         } catch (error: any) {
             console.log(error)
             throw new Error(error)
-            // this.throwOrContinue(error, retries)
-            // await sleep(3000)
-            // return this.postOrder(singSellOrder, retries)
         }
     }
 
@@ -170,15 +166,5 @@ export class X2Y2API extends BaseFetch {
 
         return data.input
     }
-
-    // export type OrderDetailResp = {
-    //     success: boolean
-    //     code: number
-    //     data?: {
-    //         order_id: number
-    //         input: string
-    //     }[]
-    //     error?: string
-    // }
 
 }

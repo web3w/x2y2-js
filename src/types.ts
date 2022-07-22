@@ -16,6 +16,24 @@ export type X2Y2OrderItem = {
     data: string
 }
 
+export type Order = {
+    item_hash: string
+    maker: string
+    type: string
+    side: number
+    status: string
+    currency: string
+    end_at: string
+    created_at: string
+    token: {
+        contract: string
+        token_id: number
+    }
+    id: number
+    price: string
+    taker: string | null
+}
+
 export type X2Y2Order = {
     salt: BigNumberish
     user: string

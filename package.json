@@ -1,6 +1,6 @@
 {
   "name": "x2y2-js",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Javascript SDK for the x2y2 protocol",
   "main": "lib/index.js",
   "type": "lib/index.d.ts",

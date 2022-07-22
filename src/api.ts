@@ -1,5 +1,5 @@
 import {
-    APIConfig, BaseFetch
+    APIConfig, BaseFetch, Order
 } from "./types";
 
 import {OP_COMPLETE_SELL_OFFER, OP_CANCEL_OFFER} from "./utils";
@@ -34,10 +34,11 @@ export class X2Y2API extends BaseFetch {
         }
     }
 
-    async getOrders(queryParams: { maker: string, tokenAddress: string, tokenId: string }, retries = 2): Promise<{ orders: any, count: number }> {
+    async getOrders(queryParams: { tokenAddress: string, tokenId: string, maker?: string, }, retries = 2)
+        : Promise<{ orders: Order, count: number }> {
         try {
             const params: Record<string, string> = {
-                maker: queryParams.maker,
+                // maker: queryParams.maker,
                 status: "open",
                 contract: queryParams.tokenAddress,
                 token_id: queryParams.tokenId,

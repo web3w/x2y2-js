@@ -18,7 +18,7 @@ To get started, create a new OpenSeaJS client, called an using your chainId and 
 import {X2Y2SDK} from 'x2y2-js'
 import {Web3Wallets} from 'web3-wallets'
 
-const {chainId, address} = new Web3Wallets('metamask')
+const {chainId, address} = new Web3Wallets({name:'metamask'})
 const x2y2 = new X2Y2SDK({chainId, address},{apiKey:"xx-xx-xx"})
 
 ```

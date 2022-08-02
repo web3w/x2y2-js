@@ -2,6 +2,8 @@
 
 SDK for the X2Y2 protocol
 
+https://web3w.github.io/x2y2-js
+
 ## Installation
 
 In your project, run:

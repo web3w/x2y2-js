@@ -40,13 +40,14 @@ const chainId = 1;
     // const sellOrderStr = JSON.stringify(sellOrder)
     // const orderRes = await sdk.api.postOrder(sellOrderStr)
 
-    // const res = await sdk.api.getOrders({maker: buyer, tokenAddress, tokenId})
-    //
-    // const order = res.orders[0]
-    const orderStr = "{\"created_at\":1658516181,\"currency\":\"0x0000000000000000000000000000000000000000\",\"end_at\":1658602573,\"id\":5419434,\"is_bundle\":false,\"is_collection_offer\":false,\"item_hash\":\"0x0267d23adff2bd14394420f45abef0e7a661b2c39fdb8275f82eb4a62fa4b2f2\",\"maker\":\"0x20e30b5a64960a08dfb64beb8ab65d860cd71da7\",\"nft\":{\"token\":\"0x6d77496b7c143d183157e8b979e47a0a0180e86b\",\"token_id\":\"1\"},\"price\":\"160000000000000000\",\"side\":1,\"status\":\"open\",\"taker\":null,\"type\":\"sell\",\"updated_at\":1658516181}\n"
-    // console.log(orderStr)
+    const res = await sdk.api.getOrders({maker: buyer, tokenAddress, tokenId})
 
-    const gas = await sdk.fulfillOrder(orderStr)
+    const order = res.orders[0]
+
+    const orderStr = JSON.stringify(order,null,2)
+    console.log(orderStr)
+
+    // const gas = await sdk.fulfillOrder(orderStr)
     // const orderId = order.id;
     // const price = order.price
     // const currency = order.currency

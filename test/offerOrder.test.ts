@@ -49,4 +49,6 @@ const chainId = 1;
     const orderRes = await api.postOrder(JSON.stringify(order))
     console.log(orderRes)
 
+
+
 })()

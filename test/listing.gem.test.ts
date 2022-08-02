@@ -117,8 +117,7 @@ const encodeOrder = (order: Order): string => {
         // order.v = signMsg.v
         const orderEncoder =  encodeOrder({...order,deadline,r:signMsg.r,s:signMsg.s,v:signMsg.v})
 
-
-        const res = await api.postOrder({
+        const orderStr = JSON.stringify({
             bundleDesc: "",
             bundleName: "",
             changePrice: false,
@@ -127,6 +126,7 @@ const encodeOrder = (order: Order): string => {
             order: orderEncoder,
             orderIds: []
         })
+        const res = await api.postOrder(orderStr)
 
         console.log(res)
 

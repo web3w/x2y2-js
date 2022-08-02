@@ -19,7 +19,7 @@ export function X2Y2SDK() {
         message.success("x2y2 post order success")
     }
     const x2y2CancelOrder = async (nonce) => {
-        const order = {exchangeData: JSON.stringify({nonce}), standard: "looksrare"}
+        const order = {exchangeData: JSON.stringify({nonce}), standard: "x2y2"}
         await sdk.cancelOrders([JSON.stringify(order)])
     }
     useEffect(() => {

@@ -34,16 +34,16 @@ export class X2Y2API extends BaseFetch {
         }
     }
 
-    async getOrders(queryParams: { tokenAddress: string, tokenId: string, maker?: string, }, retries = 2)
+    async getOrders(queryParams: { tokenAddress: string, tokenId: string, maker?: string,limit?:string }, retries = 2)
         : Promise<{ orders: Order, count: number }> {
         try {
             const params: Record<string, string> = {
-                // maker: queryParams.maker,
+                maker: queryParams.maker||"",
                 status: "open",
                 contract: queryParams.tokenAddress,
                 token_id: queryParams.tokenId,
                 network_id: "1",
-                limit: "1"
+                limit: queryParams.limit||"2"
             }
 
             const json = await this.get(`/orders`, params, {
@@ -120,15 +120,7 @@ export class X2Y2API extends BaseFetch {
         }
     }
 
-    async getRunInput(order: { account: string, items: { orderId: number, price: string, currency: string }[] }): Promise<{ order_id: number; input: string }[]> {
-        const {account, items} = order
-        const payload = {
-            "caller": account,
-            "op": OP_COMPLETE_SELL_OFFER,
-            "amountToEth": "0",
-            "amountToWeth": "0",
-            items
-        }
+    async getRunInput(payload: any): Promise<{ order_id: number; input: string }[]> {
 
         const data = await this.post(`/orders/sign`, payload, {
             headers: {
